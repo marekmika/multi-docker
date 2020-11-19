@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t marekmika/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true marekmika/react-test npm test
+
+after_success:
+  - docker build -t marekmika/multi-client ./client
+  - docker build -t marekmika/multi-server ./server
+  - docker build -t marekmika/multi-worker ./worker
+  - docker build -t marekmika/multi-nginx ./nginx
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those imageand push to docker hub
+  - docker push marekmika/multi-client
+  - docker push marekmika/multi-server
+  - docker push marekmika/multi-worker
+  - docker push marekmika/multi-nginx
